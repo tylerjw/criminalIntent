@@ -14,6 +14,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -41,7 +42,21 @@ public class CrimeListFragment extends ListFragment {
 	@TargetApi(11)
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState) {
-		View v = super.onCreateView(inflater, parent, savedInstanceState);
+		View v = inflater.inflate(R.layout.fragment_crimelist, parent, false);
+		
+		Button newCrimeButton = (Button) v.findViewById(R.id.new_crime);
+		if(newCrimeButton != null) {
+			newCrimeButton.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					Crime crime = new Crime();
+					CrimeLab.get(getActivity()).addCrime(crime);
+					Intent i = new Intent(getActivity(), CrimePagerActivity.class);
+					i.putExtra(CrimeFragment.EXTRA_CRIME_ID, crime.getId());
+					startActivityForResult(i,0);
+				}
+			});
+		}
 		
 		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
 			if(mSubtitleVisible) {
