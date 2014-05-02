@@ -11,13 +11,13 @@ public class CrimeLab {
 	private static final String FILENAME = "crimes.json";
 	
 	private static CrimeLab sCrimeLab;
-	private Context mAppContext;
+	//private Context mAppContext;
 	
 	private ArrayList<Crime> mCrimes;
 	private CriminalIntentJSONSerializer mSerializer;
 	
 	private CrimeLab(Context appContext) {
-		mAppContext = appContext;
+		//mAppContext = appContext;
 		mSerializer = new CriminalIntentJSONSerializer(appContext, FILENAME);
 		
 		try {

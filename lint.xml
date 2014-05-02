@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <issue id="Instantiatable" severity="ignore">
+        <ignore path="" />
+    </issue>
+    <issue id="MergeRootFrame">
+        <ignore path="res/layout/activity_fragment.xml" />
+    </issue>
+    <issue id="MissingTranslation">
+        <ignore path="res/values/strings.xml" />
+    </issue>
+</lint>

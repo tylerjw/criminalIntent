@@ -1214,7 +1214,8 @@ containing a value of this type.
     }
     public static final class menu {
         public static final int crime_list_item_context=0x7f0c0000;
-        public static final int fragment_crime_list=0x7f0c0001;
+        public static final int fragment_crime=0x7f0c0001;
+        public static final int fragment_crime_list=0x7f0c0002;
     }
     public static final class string {
         /**  Content description for the action bar "home" affordance. [CHAR LIMIT=NONE] 
@@ -1268,6 +1269,7 @@ containing a value of this type.
         public static final int empty_list=0x7f0a001a;
         public static final int hide_subtitle=0x7f0a0017;
         public static final int new_crime=0x7f0a0015;
+        public static final int placeholder_text=0x7f0a001b;
         public static final int show_subtitle=0x7f0a0016;
         public static final int subtitle=0x7f0a0018;
         public static final int title_activity_crime=0x7f0a000e;

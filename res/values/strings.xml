@@ -15,5 +15,5 @@
     <string name="subtitle">If you see something, say something.</string>
     <string name="delete_crime">Delete</string>
     <string name="empty_list">There are no crimes.</string>
-
+	<string name="placeholder_text">Placehoder Text</string>
 </resources>
