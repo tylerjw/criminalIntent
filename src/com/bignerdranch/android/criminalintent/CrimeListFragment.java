@@ -3,6 +3,7 @@ package com.bignerdranch.android.criminalintent;
 import java.util.ArrayList;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -28,6 +29,26 @@ public class CrimeListFragment extends ListFragment {
 	private ArrayList<Crime> mCrimes;
 	private boolean mSubtitleVisible;
 	private static final String TAG = "CrimeListFragment";
+	private Callbacks mCallbacks;
+	
+	/**
+	 * Required interface for hosting activities.
+	 */
+	public interface Callbacks {
+		void onCrimeSelected(Crime crime);
+	}
+	
+	@Override 
+	public void onAttach(Activity activity) {
+		super.onAttach(activity);
+		mCallbacks = (Callbacks)activity;
+	}
+	
+	@Override
+	public void onDetach() {
+		super.onDetach();
+		mCallbacks = null;
+	}
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
