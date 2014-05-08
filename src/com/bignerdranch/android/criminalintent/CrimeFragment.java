@@ -7,14 +7,18 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.NavUtils;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -39,12 +43,14 @@ public class CrimeFragment extends Fragment {
 	private CheckBox mSolvedCheckBox;
 	private ImageView mPhotoView;
 	private ImageButton mPhotoButton;
+	private Button mSuspectButton;
 	
 	public static final String EXTRA_CRIME_ID = "com.bignerdranch.android.crime_id";
 	private static final String DIALOG_DATE = "date";
 	private static final String DIALOG_IMAGE = "image";
 	private static final int REQUEST_DATE = 0;
 	private static final int REQUEST_PHOTO = 1;
+	private static final int REQUEST_CONTACT = 2;
 	
 	public static CrimeFragment newInstance(UUID crimeId) {
 		Bundle args = new Bundle();
@@ -145,6 +151,34 @@ public class CrimeFragment extends Fragment {
 			}
 		});
 		
+		Button reportButton = (Button)v.findViewById(R.id.crime_reportButton);
+		reportButton.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				Intent i = new Intent(Intent.ACTION_SEND);
+				i.setType("text/plain");
+				i.putExtra(Intent.EXTRA_TEXT, getCrimeReport());
+				i.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.crime_report_subject));
+				i = Intent.createChooser(i, getString(R.string.send_report));
+				startActivity(i);
+			}
+		});
+		
+		mSuspectButton = (Button)v.findViewById(R.id.crime_suspectButton);
+		mSuspectButton.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				Intent i = new Intent(Intent.ACTION_PICK,ContactsContract.Contacts.CONTENT_URI);
+				startActivityForResult(i, REQUEST_CONTACT);
+			}
+		});
+		
+		if(mCrime.getSuspect() != null) {
+			mSuspectButton.setText(mCrime.getSuspect());
+		}
+		
 		return v;
 	}
 	
@@ -163,14 +197,14 @@ public class CrimeFragment extends Fragment {
 //	public void onStart() {
 //		super.onStart();
 //		Log.d(TAG, "onStart()");
-//		showPhoto();
+//		showPhoto(); // does not work when returning from taking a photo
 //	}
 	
 	@Override
 	public void onResume() {
 		super.onResume();
 		Log.d(TAG, "onResume()");
-		showPhoto();
+		showPhoto(); // moved to onResume from onStart to show photo when returning form taking a photo
 	}
 	
 	@Override
@@ -206,20 +240,49 @@ public class CrimeFragment extends Fragment {
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if(resultCode != Activity.RESULT_OK) return;
-		if(requestCode == REQUEST_DATE) {
-			Date date = (Date)data.getSerializableExtra(DatePickerFragment.EXTRA_DATE);
-			mCrime.setDate(date);
-			updateDate();
-		} else if (requestCode == REQUEST_PHOTO) {
-			// Create a new Photo object and attach it to the crime
-			String filename = data.getStringExtra(CrimeCameraFragment.EXTRA_PHOTO_FILENAME);
-			if(filename != null) {
-				Log.i(TAG, "filename: " + filename);
+		switch(resultCode) {
+			case REQUEST_DATE:
+				Date date = (Date)data.getSerializableExtra(DatePickerFragment.EXTRA_DATE);
+				mCrime.setDate(date);
+				updateDate();
+				break;
+			case REQUEST_PHOTO:
+				// Create a new Photo object and attach it to the crime
+				String filename = data.getStringExtra(CrimeCameraFragment.EXTRA_PHOTO_FILENAME);
+				if(filename != null) {
+					Log.i(TAG, "filename: " + filename);
+					
+					Photo p = new Photo(filename);
+					mCrime.setPhoto(p);
+					Log.i(TAG, "Crime: " + mCrime.getTitle() + " has a photo");
+				}
+				break;
+			case REQUEST_CONTACT:
+				Uri contactUri = data.getData();
 				
-				Photo p = new Photo(filename);
-				mCrime.setPhoto(p);
-				Log.i(TAG, "Crime: " + mCrime.getTitle() + " has a photo");
-			}
+				// Specify which fields you want your query to return
+				// values for
+				String[] queryFields = new String[] {
+						ContactsContract.Contacts.DISPLAY_NAME
+				};
+				// Perform your query - the contactUri is like a "where"
+				// clause here
+				Cursor c = getActivity().getContentResolver().query(contactUri, queryFields, null, null, null);
+				
+				// Double-check that you actually got results
+				if(c.getCount() == 0) {
+					c.close();
+					return;
+				}
+				
+				// Pull out the first column of the first row of data - 
+				// that is your suspect's name.
+				c.moveToFirst();
+				String suspect = c.getString(0);
+				mCrime.setSuspect(suspect);
+				mSuspectButton.setText(suspect);
+				c.close();
+				break;
 		}
 	}
 	
@@ -231,5 +294,27 @@ public class CrimeFragment extends Fragment {
 	
 	private void updateDate() {
 		mDateButton.setText(mCrime.getDate().toString());
+	}
+	
+	private String getCrimeReport() {
+		String solvedString = null;
+		if(mCrime.isSolved()) {
+			solvedString = getString(R.string.crime_report_solved);
+		} else {
+			solvedString = getString(R.string.crime_report_unsolved);
+		}
+		String dateFormat = "EEE, MM dd";
+		String dateString = DateFormat.format(dateFormat,  mCrime.getDate()).toString();
+		
+		String suspect = mCrime.getSuspect();
+		if(suspect == null) {
+			suspect = getString(R.string.crime_report_no_suspect);
+		} else {
+			suspect = getString(R.string.crime_report_suspect, suspect);
+		}
+		
+		String report = getString(R.string.crime_report, mCrime.getTitle(), dateString, suspect);
+		
+		return report;
 	}
 }
