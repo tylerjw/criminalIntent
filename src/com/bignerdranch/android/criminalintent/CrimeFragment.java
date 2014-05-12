@@ -44,6 +44,7 @@ public class CrimeFragment extends Fragment {
 	private ImageView mPhotoView;
 	private ImageButton mPhotoButton;
 	private Button mSuspectButton;
+	private Callbacks mCallbacks;
 	
 	public static final String EXTRA_CRIME_ID = "com.bignerdranch.android.crime_id";
 	private static final String DIALOG_DATE = "date";
@@ -51,6 +52,25 @@ public class CrimeFragment extends Fragment {
 	private static final int REQUEST_DATE = 0;
 	private static final int REQUEST_PHOTO = 1;
 	private static final int REQUEST_CONTACT = 2;
+	
+	/**
+	 * Required interface for hosting activities
+	 */
+	public interface Callbacks {
+		void onCrimeUpdated(Crime crime);
+	}
+	
+	@Override
+	public void onAttach(Activity activity) {
+		super.onAttach(activity);
+		mCallbacks = (Callbacks)activity;
+	}
+	
+	@Override
+	public void onDetach() {
+		super.onDetach();
+		mCallbacks = null;
+	}
 	
 	public static CrimeFragment newInstance(UUID crimeId) {
 		Bundle args = new Bundle();
@@ -87,6 +107,8 @@ public class CrimeFragment extends Fragment {
 			public void onTextChanged( CharSequence c, int start,
 					int before, int count) {
 				mCrime.setTitle(c.toString());
+				mCallbacks.onCrimeUpdated(mCrime);
+				// getActivity().setTitle(mCrime.getTitle()); // TODO: test what this does
 			}
 			
 			public void beforeTextChanged( CharSequence c, int start,
@@ -117,6 +139,7 @@ public class CrimeFragment extends Fragment {
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 				// Set the crime's solved property
 				mCrime.setSolved(isChecked);
+				mCallbacks.onCrimeUpdated(mCrime);
 			}
 		});
 		
@@ -244,6 +267,7 @@ public class CrimeFragment extends Fragment {
 			case REQUEST_DATE:
 				Date date = (Date)data.getSerializableExtra(DatePickerFragment.EXTRA_DATE);
 				mCrime.setDate(date);
+				mCallbacks.onCrimeUpdated(mCrime);
 				updateDate();
 				break;
 			case REQUEST_PHOTO:
@@ -254,7 +278,8 @@ public class CrimeFragment extends Fragment {
 					
 					Photo p = new Photo(filename);
 					mCrime.setPhoto(p);
-					Log.i(TAG, "Crime: " + mCrime.getTitle() + " has a photo");
+					mCallbacks.onCrimeUpdated(mCrime);
+					showPhoto();
 				}
 				break;
 			case REQUEST_CONTACT:
@@ -280,6 +305,7 @@ public class CrimeFragment extends Fragment {
 				c.moveToFirst();
 				String suspect = c.getString(0);
 				mCrime.setSuspect(suspect);
+				mCallbacks.onCrimeUpdated(mCrime);
 				mSuspectButton.setText(suspect);
 				c.close();
 				break;
